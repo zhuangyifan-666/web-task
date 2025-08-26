@@ -1,0 +1,74 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '16'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm run install-all
+
+    - name: Build frontend for production
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Create deployment package
+      run: |
+        mkdir -p deploy
+        cp -r backend deploy/
+        cp -r frontend/build deploy/frontend-build
+        cp package.json deploy/
+        cp start.sh deploy/
+        cp README.md deploy/
+
+    - name: Deploy to server (示例)
+      run: |
+        echo "部署到 ${{ github.event.inputs.environment || 'production' }} 环境"
+        echo "这里可以添加实际的部署脚本，例如："
+        echo "- 上传文件到服务器"
+        echo "- 重启服务"
+        echo "- 运行数据库迁移"
+        echo "- 健康检查"
+
+    # 如果使用 Docker 部署，可以添加以下步骤
+    # - name: Build Docker image
+    #   run: |
+    #     docker build -t sports-room:${{ github.sha }} .
+    #     
+    # - name: Push to registry
+    #   run: |
+    #     docker push sports-room:${{ github.sha }}
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ 部署成功到 ${{ github.event.inputs.environment || 'production' }} 环境"
+        else
+          echo "❌ 部署失败"
+        fi

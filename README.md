@@ -106,7 +106,7 @@ web开发项目/
 
 1. **克隆项目**
 ```bash
-git clone <repository-url>
+git clone https://github.com/zhuangyifan-666/web-task.git
 cd web开发项目
 ```
 
